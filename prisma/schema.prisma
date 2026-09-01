@@ -1,28 +1,239 @@
-generator client { provider = "prisma-client" output = "../src/generated/prisma" }
-datasource db { provider = "postgresql" }
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
 
-enum UserRole { CLIENT FREELANCER ADMIN }
-enum JobStatus { OPEN CLOSED DRAFT IN_PROGRESS COMPLETED }
-enum ApplicationStatus { PENDING ACCEPTED REJECTED }
-enum PaymentStatus { PENDING APPROVED REJECTED }
-enum TransactionStatus { PENDING IN_PROGRESS COMPLETED CANCELLED }
-enum NotificationType { APPLICATION JOB MESSAGE PAYMENT PREMIUM TRANSACTION SYSTEM }
+datasource db {
+  provider = "postgresql"
+}
 
-model Waitlist { id String @id @default(cuid()) fullName String skill String email String @unique portfolioUrl String? createdAt DateTime @default(now()) }
+enum UserRole {
+  CLIENT
+  FREELANCER
+  ADMIN
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TransactionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  APPLICATION
+  JOB
+  MESSAGE
+  PAYMENT
+  PREMIUM
+  TRANSACTION
+  SYSTEM
+}
+
+model Waitlist {
+  id           String   @id @default(cuid())
+  fullName     String
+  skill        String
+  email        String   @unique
+  portfolioUrl String?
+  createdAt    DateTime @default(now())
+}
+
 model User {
-  id String @id @default(cuid()) fullName String email String @unique passwordHash String role UserRole phone String? bio String? skills String[] @default([]) portfolioUrl String? avatarUrl String? isPremium Boolean @default(false) premiumUntil DateTime? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt
-  profile Profile? jobs Job[] @relation("ClientJobs") applications Application[] sentMessages Message[] @relation("SentMessages") receivedMessages Message[] @relation("ReceivedMessages") files Upload[] payments Payment[] notifications Notification[] aiConversations AIConversation[] clientTransactions Transaction[] @relation("ClientTransactions") freelancerTransactions Transaction[] @relation("FreelancerTransactions")
+  id           String    @id @default(cuid())
+  fullName     String
+  email        String    @unique
+  passwordHash String
+  role         UserRole
+  phone        String?
+  bio          String?
+  skills       String[]  @default([])
+  portfolioUrl String?
+  avatarUrl    String?
+  isPremium    Boolean   @default(false)
+  premiumUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile                Profile?
+  jobs                   Job[]            @relation("ClientJobs")
+  applications           Application[]
+  sentMessages           Message[]        @relation("SentMessages")
+  receivedMessages       Message[]        @relation("ReceivedMessages")
+  files                  Upload[]
+  payments               Payment[]
+  notifications          Notification[]
+  aiConversations        AIConversation[]
+  clientTransactions     Transaction[]    @relation("ClientTransactions")
+  freelancerTransactions Transaction[]    @relation("FreelancerTransactions")
 }
-model Profile { id String @id @default(cuid()) userId String @unique headline String? location String? website String? availability String? user User @relation(fields:[userId],references:[id],onDelete:Cascade) updatedAt DateTime @updatedAt }
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  headline     String?
+  location     String?
+  website      String?
+  availability String?
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Job {
-  id String @id @default(cuid()) title String description String budget Int status JobStatus @default(OPEN) clientId String hiredFreelancerId String? startedAt DateTime? completedAt DateTime? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt
-  client User @relation("ClientJobs",fields:[clientId],references:[id],onDelete:Cascade) applications Application[] transactions Transaction[]
+  id                String    @id @default(cuid())
+  title             String
+  description       String
+  budget            Int
+  status            JobStatus @default(OPEN)
+  clientId          String
+  hiredFreelancerId String?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client       User          @relation("ClientJobs", fields: [clientId], references: [id], onDelete: Cascade)
+  applications Application[]
+  transactions Transaction[]
 }
-model Application { id String @id @default(cuid()) jobId String freelancerId String coverLetter String status ApplicationStatus @default(PENDING) createdAt DateTime @default(now()) job Job @relation(fields:[jobId],references:[id],onDelete:Cascade) freelancer User @relation(fields:[freelancerId],references:[id],onDelete:Cascade) @@unique([jobId,freelancerId]) }
-model Message { id String @id @default(cuid()) senderId String receiverId String body String createdAt DateTime @default(now()) sender User @relation("SentMessages",fields:[senderId],references:[id],onDelete:Cascade) receiver User @relation("ReceivedMessages",fields:[receiverId],references:[id],onDelete:Cascade) @@index([senderId,receiverId,createdAt]) }
-model Upload { id String @id @default(cuid()) userId String filename String url String mimeType String size Int createdAt DateTime @default(now()) user User @relation(fields:[userId],references:[id],onDelete:Cascade) }
-model Payment { id String @id @default(cuid()) userId String reference String @unique plan String @default("Premium AI Access") amount Int currency String @default("NGN") status PaymentStatus @default(PENDING) receiptUrl String? receiptFilename String? adminNote String? createdAt DateTime @default(now()) reviewedAt DateTime? reviewedById String? user User @relation(fields:[userId],references:[id],onDelete:Cascade) @@index([status,createdAt]) }
-model Transaction { id String @id @default(cuid()) jobId String clientId String freelancerId String grossAmount Int commissionRate Int @default(15) commissionAmount Int freelancerAmount Int status TransactionStatus @default(PENDING) createdAt DateTime @default(now()) completedAt DateTime? job Job @relation(fields:[jobId],references:[id],onDelete:Cascade) client User @relation("ClientTransactions",fields:[clientId],references:[id],onDelete:Cascade) freelancer User @relation("FreelancerTransactions",fields:[freelancerId],references:[id],onDelete:Cascade) @@unique([jobId]) @@index([status,createdAt]) }
-model Notification { id String @id @default(cuid()) userId String type NotificationType title String body String link String? read Boolean @default(false) createdAt DateTime @default(now()) user User @relation(fields:[userId],references:[id],onDelete:Cascade) @@index([userId,read,createdAt]) }
-model AIConversation { id String @id @default(cuid()) userId String title String @default("New conversation") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt user User @relation(fields:[userId],references:[id],onDelete:Cascade) messages AIMessage[] @@index([userId,updatedAt]) }
-model AIMessage { id String @id @default(cuid()) conversationId String role String content String createdAt DateTime @default(now()) conversation AIConversation @relation(fields:[conversationId],references:[id],onDelete:Cascade) @@index([conversationId,createdAt]) }
+
+model Application {
+  id           String            @id @default(cuid())
+  jobId        String
+  freelancerId String
+  coverLetter  String
+  status       ApplicationStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+
+  job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancer User @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, freelancerId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  body       String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, createdAt])
+}
+
+model Upload {
+  id        String   @id @default(cuid())
+  userId    String
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  userId          String
+  reference       String        @unique
+  plan            String        @default("Premium AI Access")
+  amount          Int
+  currency        String        @default("NGN")
+  status          PaymentStatus @default(PENDING)
+  receiptUrl      String?
+  receiptFilename String?
+  adminNote       String?
+  createdAt       DateTime      @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model Transaction {
+  id               String            @id @default(cuid())
+  jobId            String
+  clientId         String
+  freelancerId     String
+  grossAmount      Int
+  commissionRate   Int               @default(15)
+  commissionAmount Int
+  freelancerAmount Int
+  status           TransactionStatus @default(PENDING)
+  createdAt        DateTime          @default(now())
+  completedAt      DateTime?
+
+  job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  client     User @relation("ClientTransactions", fields: [clientId], references: [id], onDelete: Cascade)
+  freelancer User @relation("FreelancerTransactions", fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId])
+  @@index([status, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("New conversation")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
