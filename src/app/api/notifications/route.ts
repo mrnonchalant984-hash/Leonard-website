@@ -1,0 +1,3 @@
+import {NextResponse} from"next/server";import{prisma}from"@/lib/prisma";import{getSession}from"@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});return NextResponse.json(await prisma.notification.findMany({where:{userId:s.id},orderBy:{createdAt:"desc"},take:100}))}
+export async function PATCH(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});await prisma.notification.updateMany({where:{userId:s.id,read:false},data:{read:true}});return NextResponse.json({ok:true})}

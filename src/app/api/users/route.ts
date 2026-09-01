@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import {prisma} from "@/lib/prisma";import {getSession} from "@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});const users=await prisma.user.findMany({where:{id:{not:s.id},role:{in:["CLIENT","FREELANCER"]}},select:{id:true,fullName:true,role:true,email:true},take:100,orderBy:{createdAt:"desc"}});return NextResponse.json(users);}

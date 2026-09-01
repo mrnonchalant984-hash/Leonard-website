@@ -1,0 +1,2 @@
+import{NextResponse}from"next/server";import{prisma}from"@/lib/prisma";import{getSession,isAdminSession}from"@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});const where=isAdminSession(s)?{}:s.role==="CLIENT"?{clientId:s.id}:{freelancerId:s.id};return NextResponse.json(await prisma.transaction.findMany({where,include:{job:{select:{title:true}},client:{select:{fullName:true}},freelancer:{select:{fullName:true}}},orderBy:{createdAt:"desc"}}))}

@@ -1,0 +1,3 @@
+import{NextResponse}from"next/server";import{prisma}from"@/lib/prisma";import{getSession}from"@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});return NextResponse.json(await prisma.aIConversation.findMany({where:{userId:s.id},select:{id:true,title:true,updatedAt:true},orderBy:{updatedAt:"desc"}}))}
+export async function POST(){const s=await getSession();if(!s)return NextResponse.json({error:"Login required"},{status:401});return NextResponse.json(await prisma.aIConversation.create({data:{userId:s.id}}),{status:201})}
