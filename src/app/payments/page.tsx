@@ -30,38 +30,24 @@ export default function Payments() {
       const file = form.get("receipt");
       if (!(file instanceof File) || !file.size) throw new Error("Choose a payment proof file first.");
 
-      if (!cloudName || !uploadPreset) {
-        throw new Error("Cloudinary is not configured yet. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in Vercel.");
+      let up: Response;
+      if (cloudName && uploadPreset) {
+        // Fast path: browser uploads directly to an unsigned Cloudinary preset.
+        const cloudForm = new FormData();
+        cloudForm.append("file", file);
+        cloudForm.append("upload_preset", uploadPreset);
+        const cloudResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: "POST", body: cloudForm });
+        const cloudData = await cloudResponse.json();
+        if (!cloudResponse.ok || !cloudData.secure_url) throw new Error(cloudData?.error?.message || "Cloudinary upload failed");
+        up = await fetch("/api/uploads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, url: cloudData.secure_url, mimeType: file.type, size: file.size }) });
+      } else {
+        // Safe fallback: Vercel sends the file to our server route, which uses private Cloudinary variables.
+        const serverForm = new FormData();
+        serverForm.append("file", file);
+        up = await fetch("/api/uploads", { method: "POST", body: serverForm });
       }
-
-      // Upload directly to Cloudinary so Vercel does not need to store the file.
-      const cloudForm = new FormData();
-      cloudForm.append("file", file);
-      cloudForm.append("upload_preset", uploadPreset);
-      cloudForm.append("folder", "leonardx/payment-proofs");
-
-      const cloudResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-        { method: "POST", body: cloudForm }
-      );
-      const cloudData = await cloudResponse.json();
-      if (!cloudResponse.ok || !cloudData.secure_url) {
-        throw new Error(cloudData?.error?.message || "Cloudinary upload failed");
-      }
-
-      // Save the proof metadata and secure URL to Neon through our authenticated API.
-      const up = await fetch("/api/uploads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
-          url: cloudData.secure_url,
-          mimeType: file.type,
-          size: file.size,
-        }),
-      });
       const upload = await up.json();
-      if (!up.ok) throw new Error(upload.error || "Could not save payment proof");
+      if (!up.ok) throw new Error(upload.error || "Could not upload payment proof");
 
       const res = await fetch("/api/payments/initiate", {
         method: "POST", headers: { "Content-Type": "application/json" },

@@ -684,7 +684,9 @@ export default function Home() {
 
           <div>
             <strong>Support</strong>
+            <Link href="/support">Support centre</Link>
             <Link href="/contact">Contact us</Link>
+            <Link href="/trust">Trust & Safety</Link>
             <Link href="/payments">Premium</Link>
           </div>
         </div>
@@ -694,7 +696,7 @@ export default function Home() {
             © {new Date().getFullYear()} LeonardX. All rights reserved.
           </p>
 
-          <span>Built for Nigeria 🇳🇬</span>
+          <span><Link href="/privacy">Privacy</Link> · <Link href="/payment-policy">Payments</Link> · <Link href="/refunds">Refunds</Link> · Built for Nigeria 🇳🇬</span>
         </div>
       </footer>
     </main>

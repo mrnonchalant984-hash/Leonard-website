@@ -59,7 +59,6 @@ async function uploadToCloudinary(file: File) {
   const form = new FormData();
   form.append("file", file);
   form.append("upload_preset", uploadPreset);
-  form.append("folder", "leonardx/payment-proofs");
 
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
