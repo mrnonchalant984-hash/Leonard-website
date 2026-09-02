@@ -19,6 +19,7 @@ const navItems = [
   ["Payments / Premium", "/payments", "◇"],
   ["Transactions", "/transactions", "₦"],
   ["Notifications", "/notifications", "●"],
+  ["Referrals & Badges", "/referrals", "🏅"],
   ["Profile & Settings", "/profile", "◉"],
 ];
 

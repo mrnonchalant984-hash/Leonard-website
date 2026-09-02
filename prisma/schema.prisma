@@ -48,6 +48,8 @@ enum NotificationType {
   PREMIUM
   TRANSACTION
   SYSTEM
+  REFERRAL
+  BADGE
 }
 
 model Waitlist {
@@ -60,32 +62,51 @@ model Waitlist {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   fullName     String
-  email        String    @unique
+  email        String   @unique
   passwordHash String
   role         UserRole
   phone        String?
   bio          String?
-  skills       String[]  @default([])
+  skills       String[] @default([])
   portfolioUrl String?
   avatarUrl    String?
+
   isPremium    Boolean   @default(false)
   premiumUntil DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
 
-  profile                Profile?
-  jobs                   Job[]            @relation("ClientJobs")
-  applications           Application[]
-  sentMessages           Message[]        @relation("SentMessages")
-  receivedMessages       Message[]        @relation("ReceivedMessages")
-  files                  Upload[]
-  payments               Payment[]
-  notifications          Notification[]
-  aiConversations        AIConversation[]
-  clientTransactions     Transaction[]    @relation("ClientTransactions")
-  freelancerTransactions Transaction[]    @relation("FreelancerTransactions")
+  referralCode String? @unique
+  referredById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  jobs         Job[]         @relation("ClientJobs")
+  applications Application[]
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  files         Upload[]
+  payments      Payment[]
+  notifications Notification[]
+
+  aiConversations AIConversation[]
+
+  clientTransactions     Transaction[] @relation("ClientTransactions")
+  freelancerTransactions Transaction[] @relation("FreelancerTransactions")
+
+  referredBy User?  @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals  User[] @relation("UserReferrals")
+
+  referralRewards ReferralReward[]
+  badges          UserBadge[]
+
+  @@index([referredById])
+  @@index([referralCode])
 }
 
 model Profile {
@@ -101,21 +122,27 @@ model Profile {
 }
 
 model Job {
-  id                String    @id @default(cuid())
-  title             String
-  description       String
-  budget            Int
-  status            JobStatus @default(OPEN)
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  budget      Int
+  status      JobStatus @default(OPEN)
+
   clientId          String
   hiredFreelancerId String?
-  startedAt         DateTime?
-  completedAt       DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   client       User          @relation("ClientJobs", fields: [clientId], references: [id], onDelete: Cascade)
   applications Application[]
   transactions Transaction[]
+
+  @@index([clientId])
+  @@index([status])
 }
 
 model Application {
@@ -130,6 +157,8 @@ model Application {
   freelancer User @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, freelancerId])
+  @@index([freelancerId])
+  @@index([status])
 }
 
 model Message {
@@ -155,46 +184,59 @@ model Upload {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Payment {
-  id              String        @id @default(cuid())
-  userId          String
-  reference       String        @unique
-  plan            String        @default("Premium AI Access")
-  amount          Int
-  currency        String        @default("NGN")
-  status          PaymentStatus @default(PENDING)
+  id        String @id @default(cuid())
+  userId    String
+  reference String @unique
+
+  plan     String @default("Premium AI Access")
+  amount   Int
+  currency String @default("NGN")
+
+  status PaymentStatus @default(PENDING)
+
   receiptUrl      String?
   receiptFilename String?
-  adminNote       String?
-  createdAt       DateTime      @default(now())
-  reviewedAt      DateTime?
-  reviewedById    String?
+
+  adminNote String?
+
+  createdAt    DateTime  @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@index([status, createdAt])
 }
 
 model Transaction {
-  id               String            @id @default(cuid())
-  jobId            String
-  clientId         String
-  freelancerId     String
+  id           String @id @default(cuid())
+  jobId        String
+  clientId     String
+  freelancerId String
+
   grossAmount      Int
-  commissionRate   Int               @default(15)
+  commissionRate   Int @default(15)
   commissionAmount Int
   freelancerAmount Int
-  status           TransactionStatus @default(PENDING)
-  createdAt        DateTime          @default(now())
-  completedAt      DateTime?
+
+  status TransactionStatus @default(PENDING)
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 
   job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
   client     User @relation("ClientTransactions", fields: [clientId], references: [id], onDelete: Cascade)
   freelancer User @relation("FreelancerTransactions", fields: [freelancerId], references: [id], onDelete: Cascade)
 
   @@unique([jobId])
+  @@index([clientId])
+  @@index([freelancerId])
   @@index([status, createdAt])
 }
 
@@ -214,9 +256,10 @@ model Notification {
 }
 
 model AIConversation {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String   @default("New conversation")
+  id     String @id @default(cuid())
+  userId String
+  title  String @default("New conversation")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -236,4 +279,42 @@ model AIMessage {
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+model ReferralReward {
+  id             String   @id @default(cuid())
+  userId         String
+  referredUserId String   @unique
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model Badge {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String
+  icon         String   @default("🏅")
+  minReferrals Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
 }

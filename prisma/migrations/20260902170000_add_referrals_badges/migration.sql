@@ -1,0 +1,14 @@
+ALTER TABLE "User" ADD COLUMN "referralCode" TEXT NOT NULL DEFAULT md5(random()::text || clock_timestamp()::text), ADD COLUMN "referredById" TEXT;
+CREATE UNIQUE INDEX "User_referralCode_key" ON "User"("referralCode");
+ALTER TABLE "User" ADD CONSTRAINT "User_referredById_fkey" FOREIGN KEY ("referredById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+CREATE TABLE "ReferralReward" ("id" TEXT NOT NULL,"userId" TEXT NOT NULL,"referredUserId" TEXT NOT NULL,"status" TEXT NOT NULL DEFAULT 'PENDING',"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "ReferralReward_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "ReferralReward_referredUserId_key" ON "ReferralReward"("referredUserId");
+CREATE INDEX "ReferralReward_userId_status_idx" ON "ReferralReward"("userId","status");
+ALTER TABLE "ReferralReward" ADD CONSTRAINT "ReferralReward_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE TABLE "Badge" ("id" TEXT NOT NULL,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"icon" TEXT NOT NULL DEFAULT '🏅',"minReferrals" INTEGER NOT NULL DEFAULT 0,"active" BOOLEAN NOT NULL DEFAULT true,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "Badge_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "Badge_name_key" ON "Badge"("name");
+CREATE TABLE "UserBadge" ("id" TEXT NOT NULL,"userId" TEXT NOT NULL,"badgeId" TEXT NOT NULL,"awardedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "UserBadge_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "UserBadge_userId_badgeId_key" ON "UserBadge"("userId","badgeId");
+CREATE INDEX "UserBadge_userId_idx" ON "UserBadge"("userId");
+ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_badgeId_fkey" FOREIGN KEY ("badgeId") REFERENCES "Badge"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -32,6 +32,7 @@ function SignupContent() {
         body: JSON.stringify({
           ...Object.fromEntries(f),
           role,
+          referralCode: search.get("ref") || "",
         }),
       });
 
@@ -87,7 +88,7 @@ function SignupContent() {
             Choose how you want to use LeonardX and get started.
           </p>
 
-          <div className="role-switch">
+          {search.get("ref") && <div className="referral-banner">🎁 Referral code applied: <strong>{search.get("ref")}</strong></div>}\n\n          <div className="role-switch">
             <button
               type="button"
               onClick={() => setRole("FREELANCER")}
