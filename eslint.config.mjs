@@ -1,3 +1,5 @@
+import reactHooks from "eslint-plugin-react-hooks";
+
 export default [
   {
     ignores: [
@@ -7,6 +9,9 @@ export default [
     ],
   },
   {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "react/no-unescaped-entities": "off",

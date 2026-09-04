@@ -28,6 +28,7 @@ export default function PremiumPage() {
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formElement = e.currentTarget;
     setMessage(""); setWarning("");
     const form = new FormData(e.currentTarget);
     const file = form.get("receipt");
@@ -58,7 +59,7 @@ export default function PremiumPage() {
       setMessage(data.message);
       if (data.warning) setWarning(data.warning);
       setPayments(p => [data.proof, ...p]);
-      e.currentTarget.reset();
+      formElement.reset();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Payment submission failed.");
     } finally { setLoading(false); }
