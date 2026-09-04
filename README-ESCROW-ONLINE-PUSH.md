@@ -3,7 +3,7 @@
 ## What changed
 
 ### Escrow
-- Client SOP: pay 100% to OPay `0837624782` — `Leonard mary philip udoh`.
+- Client SOP: pay 100% to OPay `8037624782` — `Leonard mary philip udoh`.
 - LeonardX holds the payment until delivery approval.
 - Freelancer payout is 90%; LeonardX marketplace commission is 10%.
 - Minimum freelancer withdrawal is ₦2,000.

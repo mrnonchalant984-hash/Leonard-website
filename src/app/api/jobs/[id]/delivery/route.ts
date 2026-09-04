@@ -16,9 +16,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!(file instanceof File) || !file.size) return NextResponse.json({ error: "Finished job file is required." }, { status: 400 });
   if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Job file must not exceed 10MB." }, { status: 400 });
 
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const preset = process.env.CLOUDINARY_UPLOAD_PRESET;
-  if (!cloudName || !preset) return NextResponse.json({ error: "Cloudinary is not configured." }, { status: 503 });
+  const cloudName =
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const preset =
+    process.env.CLOUDINARY_UPLOAD_PRESET ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !preset) {
+    return NextResponse.json({
+      error:
+        "Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME and CLOUDINARY_UPLOAD_PRESET (or the NEXT_PUBLIC_ equivalents) in Vercel Production and redeploy.",
+    }, { status: 503 });
+  }
 
   const cloud = new FormData();
   cloud.append("file", file); cloud.append("upload_preset", preset);

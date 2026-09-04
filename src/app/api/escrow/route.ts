@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushNotification } from "@/lib/push";
+import { verifyReceiptRecipient } from "@/lib/receipt-ocr";
 
 const rate = () => Number(process.env.COMMISSION_RATE || 10);
 
@@ -25,6 +26,20 @@ export async function POST(request: Request) {
   const duplicate = await prisma.escrowPayment.findUnique({ where: { transactionRef: String(transactionRef).trim() } });
   if (duplicate) return NextResponse.json({ error: "That transaction reference has already been submitted." }, { status: 409 });
 
+  let verification: { matched: boolean; warning?: string } = {
+    matched: false,
+    warning: "Automatic receipt verification was not completed; admin review is required.",
+  };
+
+  if (receiptUrl) {
+    // OCR is advisory only. A receipt that cannot be read is still sent to
+    // admin review rather than being silently accepted or rejected.
+    verification = await verifyReceiptRecipient(receiptUrl, {
+      expectedAmount: job.budget,
+      expectedTransactionRef: String(transactionRef).trim(),
+    });
+  }
+
   const commissionRate = rate();
   const commissionAmount = Math.round(job.budget * commissionRate / 100);
   const escrow = await prisma.escrowPayment.create({ data: { jobId: job.id, clientId: session.id, freelancerId: job.hiredFreelancerId, amount: job.budget, commissionRate, commissionAmount, freelancerAmount: job.budget - commissionAmount, transactionRef: String(transactionRef).trim(), receiptUrl: receiptUrl || null } });
@@ -34,5 +49,9 @@ export async function POST(request: Request) {
     await prisma.notification.createMany({ data: admins.map(a => ({ userId: a.id, type: "PAYMENT" as const, title: "Escrow payment pending", body: `${session.fullName} paid ₦${job.budget.toLocaleString()} for ${job.title}. Verify the payment proof.`, link: "/admin/escrow" })) });
     await Promise.all(admins.map(a => sendPushNotification(a.id, "Escrow payment pending", `${session.fullName} paid ₦${job.budget.toLocaleString()} for ${job.title}.`, "/admin/escrow").catch(() => undefined)));
   }
-  return NextResponse.json({ escrow, message: "Escrow payment submitted. LeonardX will verify the payment before work is released." }, { status: 201 });
+  return NextResponse.json({
+    escrow,
+    warning: verification.warning,
+    message: "Escrow payment submitted. LeonardX will verify the payment before work is released.",
+  }, { status: 201 });
 }

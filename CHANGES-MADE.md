@@ -10,7 +10,7 @@ This ZIP is based on the uploaded leonardx.zip and includes the requested premiu
   - ₦10,000 Monthly
   - ₦70,000 Yearly
 - LeonardX APK Access: ₦10,000 one-time
-- OPay: 0837624782
+- OPay: 8037624782
 - Account name: Leonard mary philip udoh
 - Transaction reference is required (minimum 10 characters)
 - Receipt: JPG/PNG/PDF, maximum 5MB

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { PAYMENT_PLANS } from "@/lib/payment-plans";
+import { uploadPaymentReceipt } from "@/lib/cloudinary-client";
 
 const plans = Object.entries(PAYMENT_PLANS);
 const allowed = ".jpg,.jpeg,.png,.pdf";
@@ -28,9 +29,9 @@ export default function PremiumPage() {
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formElement = e.currentTarget;
     setMessage(""); setWarning("");
-    const form = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const form = new FormData(formElement);
     const file = form.get("receipt");
     if (!(file instanceof File) || !file.size) return setMessage("Choose your payment receipt.");
     if (file.size > 5 * 1024 * 1024) return setMessage("Receipt must not exceed 5MB.");
@@ -38,11 +39,7 @@ export default function PremiumPage() {
 
     setLoading(true);
     try {
-      const uploadForm = new FormData();
-      uploadForm.append("file", file);
-      const uploadResponse = await fetch("/api/uploads", { method: "POST", body: uploadForm });
-      const upload = await uploadResponse.json();
-      if (!uploadResponse.ok) throw new Error(upload.error || "Could not upload receipt.");
+      const upload = await uploadPaymentReceipt(file);
 
       const response = await fetch("/api/payments/initiate", {
         method: "POST",
@@ -82,7 +79,7 @@ export default function PremiumPage() {
         </div>
 
         <div className="account-box">
-          <div><span>OPay Account Number</span><strong>0837624782</strong></div>
+          <div><span>OPay Account Number</span><strong>8037624782</strong></div>
           <div><span>Account Name</span><strong>Leonard mary philip udoh</strong></div>
         </div>
 

@@ -3,10 +3,10 @@ LEONARDX VERCEL + CLOUDINARY DEPLOYMENT CHECKLIST
 1. In Cloudinary, save the unsigned upload preset:
    leonardx_payment_proofs
 
-2. In Vercel > Project > Settings > Environment Variables, add:
+2. In Vercel > Project > Settings > Environment Variables, add these to Production:
    DATABASE_URL
    NEXTAUTH_SECRET
-   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=<your Cloudinary cloud name>
    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=leonardx_payment_proofs
 
 3. Optional server-side fallback variables:
@@ -16,7 +16,11 @@ LEONARDX VERCEL + CLOUDINARY DEPLOYMENT CHECKLIST
 4. Redeploy the latest code. Environment variables with NEXT_PUBLIC_ are embedded during the build,
    so you must redeploy after adding or changing them.
 
-5. Test the complete flow:
+5. The receipt flow now uploads directly from the browser to Cloudinary, then
+   registers the secure URL with /api/uploads. The API also accepts the server-side
+   fallback variables if they are present.
+
+6. Test the complete flow:
    - Log in
    - Open /payments
    - Choose a payment proof under 10MB

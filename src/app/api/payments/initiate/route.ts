@@ -40,7 +40,10 @@ export async function POST(request: Request) {
 
     let verification: { matched: boolean; warning?: string } = { matched: false, warning: "Receipt recipient could not be automatically verified." };
     if (upload.mimeType.startsWith("image/")) {
-      verification = await verifyReceiptRecipient(receiptUrl);
+      verification = await verifyReceiptRecipient(receiptUrl, {
+        expectedAmount: amount,
+        expectedTransactionRef: transactionRef,
+      });
     } else {
       verification = { matched: false, warning: "PDF receipt saved. Admin will verify the OPay recipient manually." };
     }
