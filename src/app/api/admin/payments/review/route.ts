@@ -1,67 +1,48 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession, isAdminSession } from "@/lib/auth";
-import { emailShell, sendMail } from "@/lib/mail";
+import { prisma } from "@/lib/prisma";
+import { PAYMENT_PLANS } from "@/lib/payment-plans";
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session || !isAdminSession(session)) {
-    return NextResponse.json({ error: "Admin required" }, { status: 403 });
-  }
+  if (!isAdminSession(session)) return NextResponse.json({ error: "Admin required" }, { status: 403 });
+  const { proofId, action, note } = await request.json();
+  if (!proofId || !["APPROVED", "REJECTED"].includes(action)) return NextResponse.json({ error: "Invalid review request" }, { status: 400 });
 
-  const { paymentId, action, note } = await request.json();
-  if (!paymentId || !["APPROVED", "REJECTED"].includes(action)) {
-    return NextResponse.json({ error: "Invalid review" }, { status: 400 });
-  }
+  const proof = await prisma.paymentProof.findUnique({ where: { id: proofId } });
+  if (!proof || proof.status !== "PENDING") return NextResponse.json({ error: "Payment proof is no longer pending" }, { status: 409 });
 
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { user: true } });
-  if (!payment) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
-  if (payment.status !== "PENDING") {
-    return NextResponse.json({ error: "This payment has already been reviewed" }, { status: 409 });
-  }
+  const plan = PAYMENT_PLANS[proof.plan as keyof typeof PAYMENT_PLANS];
+  if (!plan) return NextResponse.json({ error: "Plan configuration not found" }, { status: 500 });
 
-  const approved = action === "APPROVED";
-  const aiPlan = payment.plan === "Premium AI Access";
-
-  const updated = await prisma.$transaction(async (db) => {
-    const reviewed = await db.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: action,
-        adminNote: typeof note === "string" && note.trim() ? note.trim() : null,
-        reviewedAt: new Date(),
-        reviewedById: session.id,
-      },
+  await prisma.$transaction(async db => {
+    await db.paymentProof.update({
+      where: { id: proof.id },
+      data: { status: action, reviewedAt: new Date(), reviewedById: session.id, adminNote: String(note || "").slice(0, 1000) },
     });
 
-    if (approved && aiPlan) {
-      await db.user.update({ where: { id: payment.userId }, data: { isPremium: true, premiumUntil: null } });
+    if (action === "APPROVED") {
+      const user = await db.user.findUnique({ where: { id: proof.userId }, select: { id: true, isPremium: true, aiCredits: true } });
+      if (!user) throw new Error("User not found");
+      const isAI = proof.plan.startsWith("LeonardX AI Access");
+      if (isAI) {
+        const until = new Date(Date.now() + (plan.durationDays || 1) * 86400000);
+        await db.user.update({
+          where: { id: user.id },
+          data: { isPremium: true, premiumUntil: until, aiCredits: plan.aiCredits, aiCreditsTotal: plan.aiCredits },
+        });
+      } else {
+        await db.user.update({ where: { id: user.id }, data: { apkAccess: true } });
+      }
+      await db.notification.create({
+        data: { userId: user.id, type: "PREMIUM", title: "LeonardX AI unlocked", body: isAI ? "Your LeonardX AI access is now active." : "Your LeonardX APK Access has been unlocked.", link: "/dashboard/premium" },
+      });
+    } else {
+      await db.notification.create({
+        data: { userId: proof.userId, type: "PAYMENT", title: "Payment rejected", body: "Payment rejected. Please re-upload.", link: "/dashboard/premium" },
+      });
     }
-
-    const body = approved
-      ? aiPlan
-        ? "Your Premium AI Access is approved and LeonardX AI is now unlocked."
-        : "Your Premium APK Download is approved. The download is now unlocked on your Payments page."
-      : `Your payment proof was rejected.${typeof note === "string" && note.trim() ? ` Note: ${note.trim()}` : ""}`;
-
-    await db.notification.create({
-      data: {
-        userId: payment.userId,
-        type: approved && aiPlan ? "PREMIUM" : "PAYMENT",
-        title: approved ? (aiPlan ? "LeonardX AI unlocked" : "APK download unlocked") : "Payment review update",
-        body,
-        link: "/payments",
-      },
-    });
-
-    return { reviewed, body };
   });
 
-  sendMail(
-    payment.user.email,
-    approved ? "Your LeonardX purchase was approved 🎉" : "LeonardX payment update",
-    emailShell(approved ? "Your purchase was approved 🎉" : "Payment review update", `<p>Hi ${payment.user.fullName},</p><p>${updated.body}</p>`)
-  ).catch((error) => console.error("Payment email failed:", error.message));
-
-  return NextResponse.json(updated.reviewed);
+  return NextResponse.json({ message: action === "APPROVED" ? "Payment approved and access unlocked." : "Payment rejected." });
 }

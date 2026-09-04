@@ -1,0 +1,14 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import AppShell from "@/components/AppShell";
+import EscrowClientCard from "@/components/EscrowClientCard";
+import EscrowFreelancerCard from "@/components/EscrowFreelancerCard";
+
+export default function EscrowPage() {
+  const [me, setMe] = useState<any>(null); const [jobs, setJobs] = useState<any[]>([]); const [balance, setBalance] = useState(0); const [escrows, setEscrows] = useState<any[]>([]);
+  useEffect(() => { fetch("/api/auth/me").then(r => r.json()).then(d => setMe(d.user)); fetch("/api/escrow").then(r => r.json()).then(d => setEscrows(Array.isArray(d) ? d : [])); }, []);
+  useEffect(() => { if (me?.role === "CLIENT") fetch("/api/jobs?scope=mine").then(r => r.json()).then(d => setJobs(Array.isArray(d) ? d.filter((j:any) => j.hiredFreelancerId) : [])); if (me?.role === "FREELANCER") fetch("/api/escrow/withdraw").then(r => r.json()).then(d => setBalance(Number(d.available || 0))); }, [me]);
+  return <AppShell title="LeonardX Escrow" subtitle="Protected payments for clients and reliable 90% payouts for freelancers."><section className="escrow-sop"><div><span className="eyebrow">OUR PAYMENT STANDARD</span><h2>100% paid safely. 90% released after approval.</h2><p>LeonardX holds client funds until the freelancer delivers and the client approves. The marketplace keeps 10% and the freelancer receives 90%.</p></div><span className="escrow-guarantee">✓ Guarantee: No delivery = Full refund</span></section>{me?.role === "CLIENT" ? <div className="escrow-page-stack">{jobs.length === 0 ? <div className="empty-state"><h2>No hired projects yet</h2><p>Hire a freelancer first, then fund the project through LeonardX Escrow.</p><Link className="primary-button" href="/applications">Review applications →</Link></div> : jobs.map(j => <EscrowClientCard key={j.id} jobId={j.id} amount={j.budget} freelancerName={j.deliveries?.[0]?.freelancer?.fullName || "your freelancer"} existingStatus={j.escrowPayment?.status} />)}</div> : me?.role === "FREELANCER" ? <><EscrowFreelancerCard amount={balance} /><section className="admin-section"><div className="section-mini-heading"><div><span>ESCROW HISTORY</span><h2>Your protected projects</h2></div></div><div className="admin-list">{escrows.length === 0 ? <div className="empty-state"><h3>No escrow records yet</h3></div> : escrows.map(x => <article className="payment-row" key={x.id}><div><b>{x.job?.title}</b><p>Client: {x.client?.fullName} · ₦{x.amount.toLocaleString()}</p></div><span className={`payment-status ${x.status.toLowerCase()}`}>{x.status}</span></article>)}</div></section></> : <div className="empty-state"><h2>Escrow administration</h2><p>Use the admin escrow control center to verify payments and manage withdrawals.</p><Link className="primary-button" href="/admin/escrow">Open admin escrow →</Link></div>}</AppShell>;
+}

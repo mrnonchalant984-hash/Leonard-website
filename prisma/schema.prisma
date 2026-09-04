@@ -52,6 +52,28 @@ enum NotificationType {
   BADGE
 }
 
+enum DeliveryStatus {
+  SUBMITTED
+  REVIEWED
+}
+
+enum EscrowStatus {
+  PENDING
+  FUNDED
+  IN_PROGRESS
+  DELIVERED
+  RELEASED
+  REFUNDED
+  DISPUTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+}
+
 model Waitlist {
   id           String   @id @default(cuid())
   fullName     String
@@ -73,8 +95,14 @@ model User {
   portfolioUrl String?
   avatarUrl    String?
 
-  isPremium    Boolean   @default(false)
-  premiumUntil DateTime?
+  isPremium     Boolean   @default(false)
+  premiumUntil  DateTime?
+  aiCredits     Int       @default(0)
+  aiCreditsTotal Int      @default(0)
+  apkAccess     Boolean   @default(false)
+  isOnline      Boolean   @default(false)
+  lastSeen      DateTime?
+  notificationsEnabled Boolean @default(true)
 
   referralCode String? @unique
   referredById String?
@@ -92,9 +120,15 @@ model User {
 
   files         Upload[]
   payments      Payment[]
+  paymentProofs  PaymentProof[]
+  pushSubscriptions PushSubscription[]
+  escrowPaymentsAsClient EscrowPayment[] @relation("EscrowClient")
+  escrowPaymentsAsFreelancer EscrowPayment[] @relation("EscrowFreelancer")
+  withdrawals Withdrawal[]
   notifications Notification[]
 
   aiConversations AIConversation[]
+  deliveries     JobDelivery[] @relation("FreelancerDeliveries")
 
   clientTransactions     Transaction[] @relation("ClientTransactions")
   freelancerTransactions Transaction[] @relation("FreelancerTransactions")
@@ -140,6 +174,8 @@ model Job {
   client       User          @relation("ClientJobs", fields: [clientId], references: [id], onDelete: Cascade)
   applications Application[]
   transactions Transaction[]
+  deliveries   JobDelivery[]
+  escrowPayment EscrowPayment?
 
   @@index([clientId])
   @@index([status])
@@ -214,6 +250,47 @@ model Payment {
   @@index([status, createdAt])
 }
 
+model PaymentProof {
+  id            String        @id @default(cuid())
+  userId        String
+  plan          String
+  amount        Int
+  transactionRef String       @unique
+  receiptUrl    String
+  status        PaymentStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  reviewedAt    DateTime?
+  reviewedById  String?
+  adminNote     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model JobDelivery {
+  id             String         @id @default(cuid())
+  jobId          String
+  freelancerId   String
+  fileUrl        String
+  filename       String
+  mimeType       String
+  size           Int
+  notes          String?
+  status         DeliveryStatus @default(SUBMITTED)
+  createdAt      DateTime       @default(now())
+  reviewedAt     DateTime?
+  reviewedById   String?
+
+  job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancer User @relation("FreelancerDeliveries", fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, createdAt])
+  @@index([freelancerId, createdAt])
+}
+
 model Transaction {
   id           String @id @default(cuid())
   jobId        String
@@ -221,7 +298,7 @@ model Transaction {
   freelancerId String
 
   grossAmount      Int
-  commissionRate   Int @default(15)
+  commissionRate   Int @default(10)
   commissionAmount Int
   freelancerAmount Int
 
@@ -238,6 +315,69 @@ model Transaction {
   @@index([clientId])
   @@index([freelancerId])
   @@index([status, createdAt])
+}
+
+model EscrowPayment {
+  id               String       @id @default(cuid())
+  jobId            String       @unique
+  clientId         String
+  freelancerId     String
+  amount           Int
+  commissionRate   Int          @default(10)
+  commissionAmount Int
+  freelancerAmount Int
+  transactionRef   String       @unique
+  receiptUrl       String?
+  status           EscrowStatus @default(PENDING)
+  adminNote        String?
+  createdAt        DateTime     @default(now())
+  verifiedAt       DateTime?
+  releasedAt       DateTime?
+  refundedAt       DateTime?
+  reviewedById     String?
+
+  job        Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  client     User @relation("EscrowClient", fields: [clientId], references: [id], onDelete: Cascade)
+  freelancer User @relation("EscrowFreelancer", fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
+  @@index([freelancerId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Withdrawal {
+  id            String           @id @default(cuid())
+  userId        String
+  amount        Int
+  bankName      String
+  accountName   String
+  accountNumber String
+  status        WithdrawalStatus @default(PENDING)
+  transactionRef String?          @unique
+  adminNote     String?
+  createdAt     DateTime         @default(now())
+  reviewedAt    DateTime?
+  paidAt        DateTime?
+  reviewedById  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Notification {

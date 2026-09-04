@@ -1,11 +1,33 @@
 export const PAYMENT_PLANS = {
-  "Premium AI Access": {
-    amount: Number(process.env.PREMIUM_AI_PRICE_NGN || 5000),
-    description: "Unlock LeonardX AI after manual admin approval.",
+  "LeonardX AI Access — Daily": {
+    amount: 2000,
+    description: "1 day of LeonardX AI access.",
+    aiCredits: 50,
+    durationDays: 1,
   },
-  "Premium APK Download": {
-    amount: Number(process.env.PREMIUM_APK_PRICE_NGN || 5000),
-    description: "Unlock the approved APK download after manual admin approval.",
+  "LeonardX AI Access — Weekly": {
+    amount: 5500,
+    description: "7 days of LeonardX AI access.",
+    aiCredits: 300,
+    durationDays: 7,
+  },
+  "LeonardX AI Access — Monthly": {
+    amount: 10000,
+    description: "30 days of LeonardX AI access.",
+    aiCredits: 1500,
+    durationDays: 30,
+  },
+  "LeonardX AI Access — Yearly": {
+    amount: 70000,
+    description: "365 days of LeonardX AI access.",
+    aiCredits: 18000,
+    durationDays: 365,
+  },
+  "LeonardX APK Access — One-time": {
+    amount: 10000,
+    description: "One-time access to the LeonardX APK download.",
+    aiCredits: 0,
+    durationDays: null,
   },
 } as const;
 

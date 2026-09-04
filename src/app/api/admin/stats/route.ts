@@ -9,8 +9,8 @@ export async function GET() {
   const [users, jobs, pendingPayments, approvedPayments, rejectedPayments, premiumUsers, transactions, commission, gross] = await Promise.all([
     prisma.user.count(),
     prisma.job.count({ where: { status: "OPEN" } }),
-    prisma.payment.count({ where: { status: "PENDING" } }),
-    prisma.payment.count({ where: { status: "APPROVED" } }),
+    prisma.paymentProof.count({ where: { status: "PENDING" } }),
+    prisma.paymentProof.count({ where: { status: "APPROVED" } }),
     prisma.payment.count({ where: { status: "REJECTED" } }),
     prisma.user.count({ where: { isPremium: true } }),
     prisma.transaction.count(),

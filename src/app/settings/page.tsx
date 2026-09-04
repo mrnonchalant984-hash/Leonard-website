@@ -1,1 +1,1 @@
-import {redirect} from"next/navigation";export default function Settings(){redirect('/profile')}
+import { redirect } from "next/navigation"; export default function Settings(){ redirect("/settings/notifications"); }

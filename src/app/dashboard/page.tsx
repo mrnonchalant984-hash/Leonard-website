@@ -21,8 +21,8 @@ export default async function Dashboard() {
   const earned = completed.reduce((sum, t) => sum + (session.role === "FREELANCER" ? t.freelancerAmount : t.grossAmount), 0);
   const firstName = session.fullName.split(" ")[0];
   const actions = session.role === "CLIENT"
-    ? [["Post a job", "/jobs/post", "+", "Create a new opportunity"], ["Manage jobs", "/manage-jobs", "▤", "Review active projects"], ["Messages", "/chat", "◌", "Continue conversations"], ["Transactions", "/transactions", "₦", "Track project activity"]]
-    : [["Browse jobs", "/jobs", "▣", "Find your next project"], ["Applications", "/applications", "◫", "Track your applications"], ["Messages", "/chat", "◌", "Stay connected"], ["Premium", "/payments", "✦", "Unlock LeonardX AI"]];
+    ? [["Post a job", "/jobs/post", "+", "Create a new opportunity"], ["Manage jobs", "/manage-jobs", "▤", "Review active projects"], ["Messages", "/messages", "◌", "Continue conversations"], ["Transactions", "/transactions", "₦", "Track project activity"]]
+    : [["Browse jobs", "/jobs", "▣", "Find your next project"], ["Applications", "/applications", "◫", "Track your applications"], ["Messages", "/chat", "◌", "Stay connected"], ["Premium", "/dashboard/premium", "✦", "Unlock LeonardX AI"]];
 
   return <AppShell title={`Welcome back, ${firstName}`} subtitle="Here is a clear view of what is happening in your LeonardX workspace.">
     <section className="dashboard-hero-v2">

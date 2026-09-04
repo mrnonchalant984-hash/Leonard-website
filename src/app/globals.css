@@ -9,6 +9,9 @@
 ===================================================== */
 
 :root {
+  --lx-font-sans: "Figtree", Arial, Helvetica, sans-serif;
+  --lx-font-mono: "Geist Mono", Consolas, "Courier New", monospace;
+
   /* LeonardX Brand */
   --ink: #0b1220;
   --ink-soft: #172033;
@@ -92,11 +95,7 @@ body {
   margin: 0;
   background: var(--surface);
   color: var(--ink);
-  font-family:
-    var(--font-geist-sans),
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: var(--lx-font-sans);
 }
 
 button,
@@ -3205,8 +3204,8 @@ h3 {
 ===================================================== */
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-heading: var(--lx-font-sans);
+  --font-sans: var(--lx-font-sans);
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -3431,3 +3430,22 @@ h3 {
 /* Shared professional treatment for the remaining workspace pages */
 .app-alert{border-radius:14px}.list-grid{gap:16px}.admin-section{border:1px solid #e6ebf2;border-radius:24px;background:#fff;box-shadow:0 14px 38px rgba(15,23,42,.04)}.admin-section>.section-mini-heading{padding:24px 26px;margin:0;border-bottom:1px solid #eef2f7}.admin-section>.admin-list,.admin-section>.badge-grid,.admin-section>.admin-badge-layout{padding:18px 22px}.payment-card,.form-page-card,.profile-card{border-radius:24px;box-shadow:0 16px 42px rgba(15,23,42,.05)}.payment-row{border-radius:18px}.notification-item{border-radius:18px}.chat-layout>aside,.chat-panel{border-radius:22px}.chat-layout{gap:16px}.app-form label{font-weight:750}.app-form label small{font-weight:500}.app-form input,.app-form textarea,.app-form select{border-radius:12px}.payment-status{border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.04em}.empty-state{border-radius:22px;background:linear-gradient(135deg,#fff,#fbfdff)}
 @media(max-width:700px){.admin-section{border-radius:20px}.admin-section>.section-mini-heading{padding:19px 17px;align-items:flex-start;flex-direction:column}.admin-section>.admin-list,.admin-section>.badge-grid,.admin-section>.admin-badge-layout{padding:12px}.payment-card,.form-page-card,.profile-card{border-radius:20px}.payment-row{align-items:flex-start;flex-direction:column;gap:12px}.payment-review{width:100%}.admin-actions{width:100%}.admin-actions button{flex:1}.form-page-card{padding:18px}.notification-item{padding:18px}.chat-layout>aside,.chat-panel{border-radius:18px}}
+
+/* LeonardX payment, delivery and admin additions */
+.payment-card,.admin-section{margin-bottom:24px}
+.account-box{display:flex;gap:24px;flex-wrap:wrap;align-items:center}
+.account-box>div{display:flex;flex-direction:column;gap:4px}
+.account-box span,.eyebrow,.section-mini-heading>div>span{font-size:11px;letter-spacing:.08em;opacity:.65}
+.premium-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:20px 0}
+.premium-actions button{text-align:left}
+.payment-row{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.payment-review{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:700px){.payment-row{flex-direction:column}.payment-review{align-items:flex-start}.account-box{flex-direction:column;align-items:flex-start}}
+
+/* =====================================================
+   LeonardX Escrow / Presence / Push UI
+===================================================== */
+.escrow-page-stack{display:grid;gap:18px}.escrow-sop,.escrow-card{padding:26px;border:1px solid #dbeafe;border-radius:24px;background:#fff;box-shadow:0 16px 42px rgba(15,23,42,.05)}.escrow-sop{display:flex;align-items:center;justify-content:space-between;gap:24px;background:linear-gradient(135deg,#fff,#f5f9ff)}.escrow-sop h2,.escrow-card h2{margin:6px 0 8px;font-size:25px;letter-spacing:-.03em}.escrow-sop p,.escrow-card-head p{margin:0;color:#64748b;line-height:1.65;max-width:760px}.escrow-guarantee{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #bbf7d0;border-radius:999px;background:#f0fdf4;color:#047857;font-size:11px;font-weight:850;white-space:nowrap}.escrow-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}.escrow-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.escrow-step{display:flex;gap:12px;padding:16px;border:1px solid #e5e7eb;border-radius:18px;background:#fbfdff}.escrow-step>span{display:grid;flex:0 0 32px;height:32px;place-items:center;border-radius:10px;background:#eff6ff;color:#2563eb;font-weight:900}.escrow-step strong{display:block;font-size:13px;line-height:1.45}.escrow-step small{display:block;margin-top:5px;color:#64748b;font-size:10px;line-height:1.5}.escrow-payment-form{display:grid;gap:14px;padding:18px;border:1px solid #e5e7eb;border-radius:18px;background:#f8fafc}.escrow-payment-form>div{display:grid;grid-template-columns:1fr 1fr;gap:14px}.escrow-payment-form label,.withdraw-form label{display:grid;gap:7px;font-size:12px;font-weight:800}.escrow-payment-form input,.withdraw-form input{min-height:44px;border:1px solid #dbe3ed;border-radius:12px;background:#fff;padding:0 12px}.escrow-payment-form small,.withdraw-form small{color:#64748b;font-weight:500}.escrow-status-box,.escrow-mini-note{margin-top:16px;padding:14px 16px;border:1px solid #dbeafe;border-radius:15px;background:#f8fbff}.escrow-status-box p{margin:8px 0 0;color:#64748b;font-size:12px}.escrow-balance{min-width:220px;padding:18px 20px;border-radius:18px;background:#0b1220;color:#fff}.escrow-balance span{display:block;color:#cbd5e1;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.escrow-balance strong{display:block;margin-top:5px;font-size:27px}.escrow-rules{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.escrow-rules>div{padding:16px;border:1px solid #e5e7eb;border-radius:16px;background:#f8fafc}.escrow-rules b{display:block;font-size:18px}.escrow-rules span{display:block;margin-top:4px;color:#64748b;font-size:11px}.withdraw-form{margin-top:16px;padding:18px;border:1px solid #dbeafe;border-radius:18px;background:#f8fbff}.withdraw-form button{grid-column:1/-1}.escrow-tabs{display:flex;gap:8px;padding:16px 20px;border-bottom:1px solid #eef2f7;overflow-x:auto}.escrow-tabs button{flex:0 0 auto;padding:10px 14px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:#64748b;font-size:11px;font-weight:800}.escrow-tabs button.active{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}.escrow-table-wrap{overflow-x:auto;padding:14px 20px 22px}.escrow-table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0}.escrow-table th{text-align:left;padding:11px 10px;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.escrow-table td{padding:14px 10px;border-top:1px solid #eef2f7;font-size:12px;vertical-align:middle}.escrow-table td small{display:block;margin-top:3px;color:#94a3b8}.escrow-table .admin-actions{flex-wrap:nowrap}.escrow-table .ghost{border:1px solid #e2e8f0}.page-inline-actions{display:flex;justify-content:flex-end;margin-bottom:14px}.proposal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.online-status{display:inline-flex;align-items:center;gap:6px;color:#166534;font-size:11px;font-weight:750;white-space:nowrap}.online-status.offline{color:#64748b}.online-status-compact{font-size:9px}.online-dot{width:8px;height:8px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 3px #dcfce7}.person-details{display:flex!important;flex-direction:column;align-items:flex-start}.person-details small{display:flex;align-items:center;gap:4px}.notification-permission{position:fixed;right:20px;bottom:20px;z-index:80;width:min(430px,calc(100vw - 28px));padding:17px;border:1px solid #dbeafe;border-radius:20px;background:#fff;box-shadow:0 24px 60px rgba(15,23,42,.18)}.notification-permission>div:first-child{display:flex;gap:12px}.notification-permission-icon{display:grid;flex:0 0 40px;height:40px;place-items:center;border-radius:13px;background:#eff6ff}.notification-permission strong{font-size:14px}.notification-permission p{margin:4px 0 0;color:#64748b;font-size:11px;line-height:1.5}.notification-permission-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.notification-permission-actions button{padding:9px 12px;border-radius:10px}.settings-card{padding:28px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:0 16px 42px rgba(15,23,42,.05)}.settings-card-icon{display:grid;width:48px;height:48px;place-items:center;border-radius:15px;background:#eff6ff;font-size:21px}.settings-copy{margin:18px 0}.settings-copy h2{margin:5px 0 7px;font-size:25px}.settings-copy p{max-width:700px;color:#64748b;line-height:1.7}.notification-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-top:20px;border-top:1px solid #eef2f7}.notification-toggle-row strong,.notification-toggle-row small{display:block}.notification-toggle-row small{margin-top:4px;color:#64748b;font-size:11px}.toggle{position:relative;width:52px;height:30px;border:0;border-radius:999px;background:#cbd5e1;padding:3px}.toggle span{display:block;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}.toggle.enabled{background:#2563eb}.toggle.enabled span{transform:translateX(22px)}
+@media(max-width:850px){.escrow-sop,.escrow-card-head{flex-direction:column}.escrow-steps{grid-template-columns:repeat(2,1fr)}.escrow-balance{width:100%;min-width:0}.escrow-guarantee{white-space:normal}.escrow-payment-form>div{grid-template-columns:1fr}.escrow-rules{grid-template-columns:1fr}}
+@media(max-width:700px){.escrow-sop,.escrow-card,.settings-card{padding:19px;border-radius:20px}.escrow-sop h2,.escrow-card h2,.settings-copy h2{font-size:21px}.escrow-steps{grid-template-columns:1fr;gap:9px}.escrow-step{padding:13px}.notification-permission{right:14px;bottom:86px}.notification-permission-actions{display:grid;grid-template-columns:1fr 1.4fr}.notification-permission-actions button{width:100%}.escrow-tabs{padding:12px}.escrow-table-wrap{padding:10px}.page-inline-actions{justify-content:stretch}.page-inline-actions a{width:100%;text-align:center}}
